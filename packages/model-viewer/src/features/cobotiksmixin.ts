@@ -16,18 +16,10 @@
 
 
 
-import ModelViewerElementBase, {$needsRender, $scene, $tick, toVector2D, toVector3D, Vector2D, Vector3D} from '../model-viewer-base.js';
+import ModelViewerElementBase, {$scene, $tick} from '../model-viewer-base.js';
 
 import {Constructor} from '../utilities.js';
 
-
-
-export declare type HotspotData = {
-  position: Vector3D,
-  normal: Vector3D,
-  canvasPosition: Vector3D,
-  facingCamera: boolean,
-}
 
 export declare interface CobotiksInterface {
 
@@ -62,9 +54,6 @@ export const CobotiksMixin = <T extends Constructor<ModelViewerElementBase>>(
 
     [$tick](time: number, delta: number) {
       super[$tick](time, delta);
-      const scene = this[$scene];
-
-
       
     }
 
@@ -86,7 +75,7 @@ export const CobotiksMixin = <T extends Constructor<ModelViewerElementBase>>(
     queryUserData(): any {
 
         const scene = this[$scene];
-        return scene.children[0];
+        return scene.children[0].children[0];
       }
 
     /**
