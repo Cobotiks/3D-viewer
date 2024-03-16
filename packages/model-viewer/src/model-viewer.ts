@@ -16,6 +16,7 @@
 import {AnimationMixin} from './features/animation.js';
 import {AnnotationMixin} from './features/annotation.js';
 import {ARMixin} from './features/ar.js';
+import {CobotiksMixin} from "./features/cobotiksmixin.js"
 import {ControlsMixin} from './features/controls.js';
 import {EnvironmentMixin} from './features/environment.js';
 import {LoadingMixin} from './features/loading.js';
@@ -28,8 +29,8 @@ import ModelViewerElementBase from './model-viewer-base.js';
 export {CanvasTexture, FileLoader, Loader, NearestFilter} from 'three';
 
 export const ModelViewerElement =
-    AnnotationMixin(SceneGraphMixin(StagingMixin(EnvironmentMixin(ControlsMixin(
-        ARMixin(LoadingMixin(AnimationMixin(ModelViewerElementBase))))))));
+    CobotiksMixin(AnnotationMixin(SceneGraphMixin(StagingMixin(EnvironmentMixin(ControlsMixin(
+        ARMixin(LoadingMixin(AnimationMixin(ModelViewerElementBase)))))))));
 
 export type ModelViewerElement = InstanceType<typeof ModelViewerElement>;
 
