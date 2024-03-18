@@ -75,7 +75,7 @@ export const CobotiksMixin = <T extends Constructor<ModelViewerElementBase>>(
     queryUserData(): any {
 
         const scene = this[$scene];
-        return scene.children[0].children[0];
+        return scene.children[0].children[0].userData;
       }
 
     /**
