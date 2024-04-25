@@ -24,6 +24,7 @@ import {Constructor} from '../utilities.js';
 export declare interface CobotiksInterface {
 
   queryUserData():any;
+  queryDebugSceneData():any;
 
 }
 
@@ -77,6 +78,11 @@ export const CobotiksMixin = <T extends Constructor<ModelViewerElementBase>>(
         const scene = this[$scene];
         return scene.children[0].children[0].userData;
       }
+
+      // Cobotiks scene data
+    queryDebugSceneData(): any {
+      return this[$scene];
+    }
 
     /**
      * This method returns the model position, normal and texture coordinate
