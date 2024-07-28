@@ -20,11 +20,11 @@
 <body>
     <div id="card">
         <!-- All you need to put beautiful, interactive 3D content on your site: -->
-        <model-viewer id="ref"
-            src="https://cdn.glitch.com/36cb8393-65c6-408d-a538-055ada20431b/Astronaut.glb?1542147958948"
+        <model-viewer id="ref" src="../../../initi.gltf"
             ios-src="https://cdn.glitch.com/36cb8393-65c6-408d-a538-055ada20431b/Astronaut.usdz?v=1569545377878"
             poster="https://cdn.glitch.com/36cb8393-65c6-408d-a538-055ada20431b%2Fposter-astronaut.png?v=1599079951717"
-            alt="A 3D model of an astronaut" shadow-intensity="1" camera-controls auto-rotate ar>
+            interaction-prompt="none" alt="A 3D model of an astronaut" shadow-intensity="1"
+            min-camera-orbit="auto auto 0m" camera-controls ar camera-orbit="0deg 90deg 21.08m">
         </model-viewer>
         <section class="attribution">
             <span>
@@ -38,7 +38,8 @@
         </section>
 
     </div>
-    <button id="debug">Click to debug</button>
+    <button id="debug_get">debug_get</button>
+    <button id="debug_set">debug_set</button>
 
 
     <footer>
@@ -58,11 +59,57 @@
     <script type="module" src="../dist/model-viewer.min.js">
     </script>
     <script>
-        const button = document.getElementById("debug")
+        const button = document.getElementById("debug_get")
+        const button_set = document.getElementById("debug_set")
+        const modelRef = document.getElementById("ref")
+
+        function cartesianToSpherical(x, y, z) {
+            const r = Math.sqrt(x * x + y * y + z * z);
+            if (r == 0) {
+                return { theta: 0, phi: 0, r: r }
+            }
+            const theta = Math.atan2(x, z);
+            const phi_r = y/r
+            if (phi_r > 1) {
+                phi_r = 1
+            }
+            if (phi_r < -1) {
+                phi_r = -1
+            }
+            const phi = Math.acos(phi_r);
+
+            return { theta: theta* 180.0 / Math.PI, phi: phi* 180.0 / Math.PI, r: r };
+        }
 
         button.onclick = function () {
-            const modelRef = document.getElementById("ref")
-            console.log(modelRef.queryUserData())
+            // console.log(modelRef.queryUserData())
+            let { theta, phi, radius } = modelRef.getCameraOrbit()
+            theta = theta * 180.0 / Math.PI
+            phi = phi * 180.0 / Math.PI
+            console.log("getCameraOrbit() ", theta, phi, radius)
+            console.log("getCameraTarget() ", modelRef.getCameraTarget())
+            console.log(modelRef.queryDebugSceneData())
+        };
+
+        button_set.onclick = function () {
+
+            // const theta = 0;
+            // const phi = 90;
+            // const radius = 21;
+            const coord = cartesianToSpherical(0, 0, 21)
+            const theta = coord.theta;
+            const phi = coord.phi;
+            const radius = coord.radius;            
+            console.log(coord)
+
+            modelRef.cameraOrbit = `${theta}deg ${phi}deg ${radius}m`;
+
+            const targetX = 0;
+            const targetY = 0;
+            const targetZ = 0;
+
+            modelRef.cameraTarget = `${targetX}m ${targetY}m ${targetZ}m`;
+            
         };
 
     </script>
