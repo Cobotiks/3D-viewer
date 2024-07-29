@@ -24,7 +24,7 @@
             ios-src="https://cdn.glitch.com/36cb8393-65c6-408d-a538-055ada20431b/Astronaut.usdz?v=1569545377878"
             poster="https://cdn.glitch.com/36cb8393-65c6-408d-a538-055ada20431b%2Fposter-astronaut.png?v=1599079951717"
             interaction-prompt="none" alt="A 3D model of an astronaut" shadow-intensity="1"
-            min-camera-orbit="auto auto 0m" camera-controls ar camera-orbit="0deg 90deg 21.08m">
+            min-camera-orbit="auto auto 0m" camera-controls ar>
         </model-viewer>
         <section class="attribution">
             <span>
@@ -96,10 +96,10 @@
             // const theta = 0;
             // const phi = 90;
             // const radius = 21;
-            const coord = cartesianToSpherical(0, 0, 21)
+            const coord = cartesianToSpherical(0, 0, 20)
             const theta = coord.theta;
             const phi = coord.phi;
-            const radius = coord.radius;            
+            const radius = coord.r;            
             console.log(coord)
 
             modelRef.cameraOrbit = `${theta}deg ${phi}deg ${radius}m`;
