@@ -76,13 +76,19 @@ export const CobotiksMixin = <T extends Constructor<ModelViewerElementBase>>(
     queryUserData(): any {
 
         const scene = this[$scene];
-        return scene.children[0].children[0].userData;
+        return scene.children[0].children.find((t:any) => t.name === "Scene")?.userData;
+        // .children[0].children.find((t) => t.name === "Scene").userData
       }
 
       // Cobotiks scene data
     queryDebugSceneData(): any {
       return this[$scene];
     }
+
+    // queryDebugSceneCamera(): any {
+    //   const {camera} = this
+    //   return camera;
+    // }
 
     /**
      * This method returns the model position, normal and texture coordinate
