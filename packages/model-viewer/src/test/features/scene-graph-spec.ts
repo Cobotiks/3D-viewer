@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {expect} from '@esm-bundle/chai';
+import {expect} from 'chai';
 import {Mesh, MeshStandardMaterial} from 'three';
 
 import {$currentGLTF} from '../../features/scene-graph.js';
@@ -145,6 +145,29 @@ suite('SceneGraph', () => {
         const gltfRoot = getGLTFRoot(element[$scene]);
         expect(gltfRoot.children[0].userData.variantMaterials.size).to.be.eq(3);
         expect(gltfRoot.children[1].userData.variantMaterials.size).to.be.eq(3);
+      });
+
+      test('allows the scene graph to be manipulated', async () => {
+        element.variantName = 'Yellow Red';
+        await waitForEvent(element, 'variant-applied');
+
+        const material =
+            (element[$scene].model!.children[1] as Mesh).material as
+            MeshStandardMaterial;
+
+        const mat = element.model!.getMaterialByName('red')!;
+
+        expect(mat.isActive).to.be.true;
+
+        mat.pbrMetallicRoughness.setBaseColorFactor([0.5, 0.5, 0.5, 1]);
+
+        const color = mat.pbrMetallicRoughness.baseColorFactor;
+
+        expect(color).to.be.eql([0.5, 0.5, 0.5, 1]);
+
+        console.log(material.name, ': actual material ', material.uuid);
+
+        expect(material.color).to.include({r: 0.5, g: 0.5, b: 0.5});
       });
 
       test(

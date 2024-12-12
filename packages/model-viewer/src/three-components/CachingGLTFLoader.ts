@@ -14,6 +14,7 @@
  */
 
 import {EventDispatcher, Texture, WebGLRenderer} from 'three';
+import {MeshoptDecoder} from 'three/examples/jsm/libs/meshopt_decoder.module.js';
 import {DRACOLoader} from 'three/examples/jsm/loaders/DRACOLoader.js';
 import {GLTF, GLTFLoader} from 'three/examples/jsm/loaders/GLTFLoader.js';
 import {KTX2Loader} from 'three/examples/jsm/loaders/KTX2Loader.js';
@@ -69,15 +70,6 @@ const ktx2Loader = new KTX2Loader();
 let meshoptDecoderLocation: string;
 let meshoptDecoder: Promise<typeof MeshoptDecoder>|undefined;
 
-interface MeshoptDecoder {
-  ready: Promise<void>;
-  supported: boolean;
-}
-
-declare global {
-  const MeshoptDecoder: MeshoptDecoder;
-}
-
 export const $loader = Symbol('loader');
 export const $evictionPolicy = Symbol('evictionPolicy');
 const $GLTFInstance = Symbol('GLTFInstance');
@@ -86,8 +78,6 @@ export class CachingGLTFLoader<T extends GLTFInstanceConstructor =
                                              GLTFInstanceConstructor> extends
     EventDispatcher<
         {'preload': {element: ModelViewerElementBase, src: String}}> {
-  static withCredentials: boolean;
-
   static setDRACODecoderLocation(url: string) {
     dracoDecoderLocation = url;
     dracoLoader.setDecoderPath(url);
@@ -188,7 +178,7 @@ export class CachingGLTFLoader<T extends GLTFInstanceConstructor =
   async preload(
       url: string, element: ModelViewerElementBase,
       progressCallback: ProgressCallback = () => {}) {
-    this[$loader].setWithCredentials(CachingGLTFLoader.withCredentials);
+    this[$loader].setWithCredentials(element.withCredentials);
     this.dispatchEvent({type: 'preload', element: element, src: url});
     if (!cache.has(url)) {
       if (meshoptDecoder != null) {

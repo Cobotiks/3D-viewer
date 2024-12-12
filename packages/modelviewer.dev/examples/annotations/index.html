@@ -107,7 +107,7 @@
     display: none;
   }
 </style>
-<model-viewer id="hotspot-demo" ar ar-modes="webxr" camera-controls touch-action="pan-y" src="../../shared-assets/models/Astronaut.glb" poster="../../assets/poster-astronaut.webp" shadow-intensity="1" alt="A 3D model of an astronaut.">
+<model-viewer id="hotspot-demo" ar ar-modes="webxr" camera-controls touch-action="pan-y" src="../../shared-assets/models/Astronaut.glb" poster="../../assets/poster-astronaut.webp" tone-mapping="aces" shadow-intensity="1" alt="A 3D model of an astronaut.">
   <button class="hotspot" slot="hotspot-visor" data-position="0 1.75 0.35" data-normal="0 0 1"></button>
   <button class="hotspot" slot="hotspot-hand" data-position="-0.54 0.93 0.1" data-normal="-0.73 0.05 0.69">
     <div class="annotation">This hotspot disappears completely</div>
@@ -174,7 +174,9 @@
   let tailRect;
   
   function onResize(){
-    baseRect = modelViewer1.getBoundingClientRect();
+    const arStatus = modelViewer1.getAttribute('ar-status');
+    baseRect = (arStatus == "not-presenting" || arStatus == "failed") ? 
+      modelViewer1.getBoundingClientRect() : new DOMRect();
     noseRect = document.querySelector('#nose').getBoundingClientRect();
     hoofRect = document.querySelector('#hoof').getBoundingClientRect();
     tailRect = document.querySelector('#tail').getBoundingClientRect();
@@ -182,7 +184,16 @@
 
   window.addEventListener("resize", onResize);
 
-  modelViewer1.addEventListener('ar-status', onResize);
+  modelViewer1.addEventListener('ar-status', (event) => {
+    lines.forEach((element) => {
+      if (event.detail.status !== 'session-started') {
+        element.classList.remove('hide');
+      } else {
+        element.classList.add('hide');
+      }
+    });
+    onResize();
+  });
 
   modelViewer1.addEventListener('load', () => {
     onResize();
@@ -289,7 +300,7 @@
           </p>
           <example-snippet stamp-to="dimensions" highlight-as="html">
             <template>
-<model-viewer id="dimension-demo" ar ar-modes="webxr" ar-scale="fixed" camera-orbit="-30deg auto auto" max-camera-orbit="auto 100deg auto" shadow-intensity="1" camera-controls touch-action="pan-y" src="../../assets/ShopifyModels/Chair.glb" tone-mapping="commerce" alt="A 3D model of an armchair.">
+<model-viewer id="dimension-demo" ar ar-modes="webxr" ar-scale="fixed" camera-orbit="-30deg auto auto" max-camera-orbit="auto 100deg auto" shadow-intensity="1" camera-controls touch-action="pan-y" src="../../assets/ShopifyModels/Chair.glb" alt="A 3D model of an armchair.">
   <button slot="hotspot-dot+X-Y+Z" class="dot" data-position="1 -1 1" data-normal="1 0 0"></button>
   <button slot="hotspot-dim+X-Y" class="dim" data-position="1 -1 0" data-normal="1 0 0"></button>
   <button slot="hotspot-dot+X-Y-Z" class="dot" data-position="1 -1 -1" data-normal="1 0 0"></button>
@@ -553,6 +564,7 @@
       min-camera-orbit="auto auto 5%"
       touch-action="none"
       poster="../../assets/SketchfabModels/ThorAndTheMidgardSerpent.webp"
+      tone-mapping="aces" 
       ar
      
     >

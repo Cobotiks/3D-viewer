@@ -13,8 +13,6 @@
  * limitations under the License.
  */
 
-import {EventDispatcher} from 'three';
-
 import {HAS_WEBXR_DEVICE_API, HAS_WEBXR_HIT_TEST_API, IS_WEBXR_AR_CANDIDATE} from './constants.js';
 
 export type Constructor<T = object, U = object> = {
@@ -125,68 +123,6 @@ export const clamp =
     (value: number, lowerLimit: number, upperLimit: number): number =>
         Math.max(lowerLimit, Math.min(upperLimit, value));
 
-
-// The DPR we use for a "capped" scenario (see resolveDpr below):
-export const CAPPED_DEVICE_PIXEL_RATIO = 1;
-
-
-/**
- * This helper analyzes the layout of the current page to decide if we should
- * use the natural device pixel ratio, or a capped value.
- *
- * We cap DPR if there is no meta viewport (suggesting that user is not
- * consciously specifying how to scale the viewport relative to the device
- * screen size).
- *
- * The rationale is that this condition typically leads to a pathological
- * outcome on mobile devices. When the window dimensions are scaled up on a
- * device with a high DPR, we create a canvas that is much larger than
- * appropriate to accommodate for the pixel density if we naively use the
- * reported DPR.
- *
- * This value needs to be measured in real time, as device pixel ratio can
- * change over time (e.g., when a user zooms the page). Also, in some cases
- * (such as Firefox on Android), the window's innerWidth is initially reported
- * as the same as the screen's availWidth but changes later.
- *
- * A user who specifies a meta viewport, thereby consciously creating scaling
- * conditions where <model-viewer> is slow, will be encouraged to live their
- * best life.
- */
-export const resolveDpr: () => number = (() => {
-  // If true, implies that the user is conscious of the viewport scaling
-  // relative to the device screen size.
-  const HAS_META_VIEWPORT_TAG = (() => {
-    // Search result pages sometimes do not include a meta viewport tag even
-    // though they are certainly modern and work properly with devicePixelRatio.
-    if (document.documentElement.getAttribute('itemtype')
-            ?.includes('schema.org/SearchResultsPage')) {
-      return true;
-    }
-
-    const metas = document.head != null ?
-        Array.from(document.head.querySelectorAll('meta')) :
-        [];
-
-    for (const meta of metas) {
-      if (meta.name === 'viewport') {
-        return true;
-      }
-    }
-
-    return false;
-  })();
-
-  if (!HAS_META_VIEWPORT_TAG) {
-    console.warn(
-        'No <meta name="viewport"> detected; <model-viewer> will cap pixel density at 1.');
-  }
-
-  return () => HAS_META_VIEWPORT_TAG ? window.devicePixelRatio :
-                                       CAPPED_DEVICE_PIXEL_RATIO;
-})();
-
-
 /**
  * Debug mode is enabled when one of the two following conditions is true:
  *
@@ -205,13 +141,6 @@ export const isDebugMode = (() => {
        self.location.search.match(debugQueryParameter));
 })();
 
-
-/**
- * Three.js EventDispatcher and DOM EventTarget use different event patterns,
- * so AnyEvent covers the shape of both event types.
- */
-export type AnyEvent = Event|CustomEvent<any>|{[index: string]: string};
-
 export type PredicateFunction<T = void> = (value: T) => boolean;
 
 export const timePasses = (ms: number = 0): Promise<void> =>
@@ -222,16 +151,16 @@ export const timePasses = (ms: number = 0): Promise<void> =>
  * @param {string} eventName
  * @param {?Function} predicate
  */
-export const waitForEvent = <T extends AnyEvent = Event>(
-    target: EventTarget|EventDispatcher,
-    eventName: string,
-    predicate: PredicateFunction<T>|null = null): Promise<T> =>
-    new Promise(resolve => {
-      function handler(event: AnyEvent) {
-        if (!predicate || predicate(event as T)) {
-          resolve(event as T);
-          target.removeEventListener(eventName, handler as any);
-        }
-      }
-      target.addEventListener(eventName, handler as any);
-    });
+export const waitForEvent =
+    <T>(target: any,
+        eventName: string,
+        predicate: PredicateFunction<T>|null = null): Promise<T> =>
+        new Promise(resolve => {
+          function handler(event: T) {
+            if (!predicate || predicate(event)) {
+              resolve(event);
+              target.removeEventListener(eventName, handler);
+            }
+          }
+          target.addEventListener(eventName, handler);
+        });

@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {ACESFilmicToneMapping, AnimationAction, AnimationActionLoopStyles, AnimationClip, AnimationMixer, Box3, Camera, Euler, Event as ThreeEvent, LoopPingPong, LoopRepeat, Material, Matrix3, Mesh, Object3D, PerspectiveCamera, Raycaster, Scene, Sphere, Texture, ToneMapping, Triangle, Vector2, Vector3, WebGLRenderer} from 'three';
+import {ACESFilmicToneMapping, AnimationAction, AnimationActionLoopStyles, AnimationClip, AnimationMixer, AnimationMixerEventMap, Box3, Camera, Euler, Event as ThreeEvent, LoopPingPong, LoopRepeat, Material, Matrix3, Mesh, Object3D, PerspectiveCamera, Raycaster, Scene, Sphere, Texture, ToneMapping, Triangle, Vector2, Vector3, WebGLRenderer, XRTargetRaySpace} from 'three';
 import {CSS2DRenderer} from 'three/examples/jsm/renderers/CSS2DRenderer.js';
 import {reduceVertices} from 'three/examples/jsm/utils/SceneUtils.js';
 
@@ -23,7 +23,6 @@ import ModelViewerElementBase, {$renderer, EffectComposerInterface, RendererInte
 import {ModelViewerElement} from '../model-viewer.js';
 import {normalizeUnit} from '../styles/conversions.js';
 import {NumberNode, parseExpressions} from '../styles/parsers.js';
-import {resolveDpr} from '../utilities.js';
 
 import {Damper, SETTLING_TIME} from './Damper.js';
 import {ModelViewerGLTFInstance} from './gltf-instance/ModelViewerGLTFInstance.js';
@@ -84,6 +83,7 @@ export class ModelScene extends Scene {
   public xrCamera: Camera|null = null;
 
   public url: string|null = null;
+  public pivot = new Object3D();
   public target = new Object3D();
   public animationNames: Array<string> = [];
   public boundingBox = new Box3();
@@ -130,7 +130,10 @@ export class ModelScene extends Scene {
     this.camera = new PerspectiveCamera(45, 1, 0.1, 100);
     this.camera.name = 'MainCamera';
 
-    this.add(this.target);
+    this.add(this.pivot);
+    this.pivot.name = 'Pivot';
+
+    this.pivot.add(this.target);
 
     this.setSize(width, height);
 
@@ -340,7 +343,7 @@ export class ModelScene extends Scene {
     this.aspect = this.width / this.height;
 
     if (this.externalRenderer != null) {
-      const dpr = resolveDpr();
+      const dpr = window.devicePixelRatio;
       this.externalRenderer.resize(width * dpr, height * dpr);
     }
 
@@ -597,6 +600,14 @@ export class ModelScene extends Scene {
   }
 
   /**
+   * Gets the current target point, which may not equal the goal returned by
+   * getTarget() due to finite input decay smoothing.
+   */
+  getDynamicTarget(): Vector3 {
+    return this.target.position.clone().multiplyScalar(-1);
+  }
+
+  /**
    * Shifts the model to the target point immediately instead of easing in.
    */
   jumpToGoal() {
@@ -616,6 +627,8 @@ export class ModelScene extends Scene {
       x = this.targetDamperX.update(x, goal.x, delta, normalization);
       y = this.targetDamperY.update(y, goal.y, delta, normalization);
       z = this.targetDamperZ.update(z, goal.z, delta, normalization);
+      this.groundedSkybox.position.x = -x;
+      this.groundedSkybox.position.z = -z;
       this.target.position.set(x, y, z);
       this.target.updateMatrixWorld();
       this.queueRender();
@@ -642,12 +655,13 @@ export class ModelScene extends Scene {
    * center.
    */
   set yaw(radiansY: number) {
-    this.rotation.y = radiansY;
+    this.pivot.rotation.y = radiansY;
+    this.groundedSkybox.rotation.y = -radiansY;
     this.queueRender();
   }
 
   get yaw(): number {
-    return this.rotation.y;
+    return this.pivot.rotation.y;
   }
 
   set animationTime(value: number) {
@@ -769,7 +783,8 @@ export class ModelScene extends Scene {
     this.queueShadowRender();
   }
 
-  subscribeMixerEvent(event: string, callback: (...args: any[]) => void) {
+  subscribeMixerEvent(
+      event: keyof AnimationMixerEventMap, callback: (...args: any[]) => void) {
     this.mixer.addEventListener(event, callback);
   }
 
@@ -844,11 +859,19 @@ export class ModelScene extends Scene {
     }
   }
 
+  getHit(object: Object3D = this) {
+    const hits = raycaster.intersectObject(object, true);
+    return hits.find((hit) => hit.object.visible && !hit.object.userData.noHit);
+  }
+
+  hitFromController(controller: XRTargetRaySpace, object: Object3D = this) {
+    raycaster.setFromXRController(controller);
+    return this.getHit(object);
+  }
+
   hitFromPoint(ndcPosition: Vector2, object: Object3D = this) {
     raycaster.setFromCamera(ndcPosition, this.getCamera());
-    const hits = raycaster.intersectObject(object, true);
-
-    return hits.find((hit) => hit.object.visible && !hit.object.userData.noHit);
+    return this.getHit(object);
   }
 
   /**
@@ -922,6 +945,7 @@ export class ModelScene extends Scene {
     // the slots appear in the shadow DOM and the elements get attached,
     // allowing us to dispatch events on them.
     this.annotationRenderer.domElement.appendChild(hotspot.element);
+    this.updateSurfaceHotspot(hotspot);
   }
 
   removeHotspot(hotspot: Hotspot) {
@@ -944,49 +968,50 @@ export class ModelScene extends Scene {
   /**
    * Lazy initializer for surface hotspots - will only run once.
    */
-  initializeSurface(hotspot: Hotspot) {
-    if (hotspot.surface != null && hotspot.mesh == null) {
-      const nodes = parseExpressions(hotspot.surface)[0].terms as NumberNode[];
-      if (nodes.length != 8) {
-        console.warn(hotspot.surface + ' does not have exactly 8 numbers.');
-        return;
-      }
-      const primitiveNode =
-          this.element.model![$nodeFromIndex](nodes[0].number, nodes[1].number);
-      const tri =
-          new Vector3(nodes[2].number, nodes[3].number, nodes[4].number);
-
-      if (primitiveNode == null) {
-        console.warn(
-            hotspot.surface +
-            ' does not match a node/primitive in this glTF! Skipping this hotspot.');
-        return;
-      }
-
-      const numVert = primitiveNode.mesh.geometry.attributes.position.count;
-      if (tri.x >= numVert || tri.y >= numVert || tri.z >= numVert) {
-        console.warn(
-            hotspot.surface +
-            ' vertex indices out of range in this glTF! Skipping this hotspot.');
-        return;
-      }
-
-      const bary =
-          new Vector3(nodes[5].number, nodes[6].number, nodes[7].number);
-      hotspot.mesh = primitiveNode.mesh;
-      hotspot.tri = tri;
-      hotspot.bary = bary;
+  updateSurfaceHotspot(hotspot: Hotspot) {
+    if (hotspot.surface == null || this.element.model == null) {
+      return;
     }
+    const nodes = parseExpressions(hotspot.surface)[0].terms as NumberNode[];
+    if (nodes.length != 8) {
+      console.warn(hotspot.surface + ' does not have exactly 8 numbers.');
+      return;
+    }
+    const primitiveNode =
+        this.element.model[$nodeFromIndex](nodes[0].number, nodes[1].number);
+    if (primitiveNode == null) {
+      console.warn(
+          hotspot.surface +
+          ' does not match a node/primitive in this glTF! Skipping this hotspot.');
+      return;
+    }
+
+    const numVert = primitiveNode.mesh.geometry.attributes.position.count;
+    const tri = new Vector3(nodes[2].number, nodes[3].number, nodes[4].number);
+    if (tri.x >= numVert || tri.y >= numVert || tri.z >= numVert) {
+      console.warn(
+          hotspot.surface +
+          ' vertex indices out of range in this glTF! Skipping this hotspot.');
+      return;
+    }
+
+    const bary = new Vector3(nodes[5].number, nodes[6].number, nodes[7].number);
+    hotspot.mesh = primitiveNode.mesh;
+    hotspot.tri = tri;
+    hotspot.bary = bary;
+
+    hotspot.updateSurface();
   }
 
   /**
    * Update positions of surface hotspots to follow model animation.
    */
-  updateSurfaceHotspots() {
-    const forceUpdate = !this.element.paused;
+  animateSurfaceHotspots() {
+    if (this.element.paused) {
+      return;
+    }
     this.forHotspots((hotspot) => {
-      this.initializeSurface(hotspot);
-      hotspot.updateSurface(forceUpdate);
+      hotspot.updateSurface();
     });
   }
 

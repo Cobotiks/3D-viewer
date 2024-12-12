@@ -13,7 +13,7 @@
  * limitations under the License.
  */
 
-import {expect} from '@esm-bundle/chai';
+import {expect} from 'chai';
 import {Matrix4, PerspectiveCamera, Vector2, Vector3} from 'three';
 
 import {$scene} from '../../model-viewer-base.js';
@@ -33,6 +33,11 @@ class MockXRFrame implements XRFrame {
   // We don't use nor test the returned XRPose other than its existence.
   getPose(_xrSpace: XRSpace, _frameOfRef: XRReferenceSpace) {
     return {} as XRPose;
+  }
+
+  // We don't use getDepthInformation()
+  getDepthInformation(_view: XRView): XRCPUDepthInformation|null|undefined {
+    return;
   }
 
   getViewerPose(_referenceSpace?: XRReferenceSpace): XRViewerPose {

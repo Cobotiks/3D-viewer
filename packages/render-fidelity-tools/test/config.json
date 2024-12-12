@@ -3,54 +3,6 @@
     {
       "name": "model-viewer",
       "description": "<model-viewer>"
-    },
-    {
-      "name": "filament",
-      "description": "Filament",
-      "scripts": {
-        "setup": "prepare-ibl.sh"
-      }
-    },
-    {
-      "name": "babylon",
-      "description": "Babylon"
-    },
-    {
-      "name": "gltf-sample-viewer",
-      "description": "gltf-sample-viewer"
-    },
-    {
-      "name": "three-gpu-pathtracer",
-      "description": "three-gpu-pathtracer"
-    },
-    {
-      "name": "stellar",
-      "description": "Dassault Systèmes STELLAR",
-      "command": {}
-    },
-    {
-      "name": "vray",
-      "description": "V-Ray",
-      "command": {
-        "executable": "python3",
-        "args": [
-          "test/renderers/vray/render.py"
-        ]
-      }
-    },
-    {
-      "name": "blender-cycles",
-      "description": "Blender's Cycles render engine",
-      "command": {
-        "executable": "blender",
-        "args": [
-          "-b",
-          "--factory-startup",
-          "-noaudio",
-          "-P",
-          "test/renderers/blender-cycles/render.py"
-        ]
-      }
     }
   ],
   "scenarios": [
@@ -222,7 +174,10 @@
       "dimensions": {
         "height": 800,
         "width": 550
-      }
+      },
+      "exclude": [
+        "model-viewer"
+      ]
     },
     {
       "name": "khronos-MosquitoInAmber",
@@ -443,7 +398,7 @@
         "y": 0.1,
         "x": 0.05
       },
-     "orbit": {
+      "orbit": {
         "radius": 0.5
       },
       "exclude": [
@@ -633,6 +588,7 @@
         "radius": 22.00
       },
       "exclude": [
+        "model-viewer",
         "vray"
       ]
     },
@@ -839,7 +795,7 @@
       "model": "../../../shared-assets/models/glTF-Sample-Assets/Models/RecursiveSkeletons/glTF-Binary/RecursiveSkeletons.glb",
       "orbit": {
         "radius": 120.0,
-        "phi": 5
+        "phi": 22.5
       },
       "target": {
         "y": 95

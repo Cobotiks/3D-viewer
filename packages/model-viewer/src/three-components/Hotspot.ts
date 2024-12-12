@@ -143,10 +143,7 @@ export class Hotspot extends CSS2DObject {
     }
   }
 
-  updateSurface(forceUpdate: boolean) {
-    if (!forceUpdate && this.initialized) {
-      return;
-    }
+  updateSurface() {
     const {mesh, tri, bary} = this;
     if (mesh == null || tri == null || bary == null) {
       return;
@@ -165,8 +162,8 @@ export class Hotspot extends CSS2DObject {
 
     triangle.set(a, b, c);
     triangle.getNormal(this.normal).transformDirection(mesh.matrixWorld);
-    const scene = target.parent as ModelScene;
-    quat.setFromAxisAngle(a.set(0, 1, 0), -scene.yaw);
+    const pivot = target.parent as ModelScene;
+    quat.setFromAxisAngle(a.set(0, 1, 0), -pivot.rotation.y);
     this.normal.applyQuaternion(quat);
   }
 

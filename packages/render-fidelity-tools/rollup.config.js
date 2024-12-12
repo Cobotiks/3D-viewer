@@ -13,11 +13,11 @@
  * limitations under the License.
  */
 
-const {nodeResolve: resolve} = require('@rollup/plugin-node-resolve');
-const replace = require('@rollup/plugin-replace');
-const externalGlobals = require('rollup-plugin-external-globals');
-const {basename} = require('path');
-const commonjs = require('@rollup/plugin-commonjs')
+import commonjs from '@rollup/plugin-commonjs';
+import {nodeResolve as resolve} from '@rollup/plugin-node-resolve';
+import replace from '@rollup/plugin-replace';
+import {basename} from 'path';
+import externalGlobals from 'rollup-plugin-external-globals';
 
 const onwarn = (warning, warn) => {
   // Suppress non-actionable warning caused by TypeScript boilerplate:
@@ -58,13 +58,6 @@ const buildTarget = (input, outputFormat) => ({
 const outputOptions = [
   buildTarget('./lib/components/image-comparison-app.js', 'esm'),
   buildTarget('./lib/components/renderer-harness.js', 'esm'),
-  buildTarget('./lib/components/renderers/filament-viewer.js', 'esm'),
-  buildTarget('./lib/components/renderers/babylon-viewer.js', 'esm'),
-  // disabled until resolved: https://github.com/google/model-viewer/pull/3513
-  // buildTarget('./lib/components/renderers/rhodonite-viewer.js', 'esm'),
-  // buildTarget('./lib/components/renderers/dspbr-pt-viewer.js', 'esm'),
-  buildTarget('./lib/components/renderers/gltf-sample-viewer.js', 'esm'),
-  buildTarget('./lib/components/renderers/three-gpu-pathtracer-viewer.js', 'esm'),
   buildTarget('./lib/image-comparison-worker.js', 'iife')
 ];
 

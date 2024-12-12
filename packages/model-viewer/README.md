@@ -2,6 +2,7 @@
 
  [![Min Zip](https://badgen.net/bundlephobia/minzip/@google/model-viewer)](https://bundlephobia.com/result?p=@google/model-viewer)
  [![Latest Release](https://img.shields.io/github/v/release/google/model-viewer)](https://github.com/google/model-viewer/releases)
+ [![NPM Package](https://img.shields.io/npm/v/@google/model-viewer)](https://www.npmjs.com/package/@google/model-viewer)
 
  [![follow on Twitter](https://img.shields.io/twitter/follow/modelviewer?style=social&logo=twitter)](https://twitter.com/intent/follow?screen_name=modelviewer)
  [![Github Discussions](https://img.shields.io/github/stars/google/model-viewer.svg?style=social&label=Star&maxAge=2592000)](https://github.com/google/model-viewer/discussions)
@@ -15,10 +16,12 @@ As new standards and APIs become available `<model-viewer>` will be improved
 to take advantage of them. If possible, fallbacks and polyfills will be
 supported to provide a seamless development experience.
 
-[Demo](https://model-viewer.glitch.me) • [Documentation](https://modelviewer.dev/) • [Quality Tests](https://modelviewer.dev/fidelity/)
+[Demo](https://model-viewer.glitch.me) • [Documentation](https://modelviewer.dev/) • [Quality Comparisons](https://github.khronos.org/glTF-Render-Fidelity/comparison/) (courtesy of Khronos)
 
 
 ## Installing
+
+### NPM
 
 The `<model-viewer>` web component can be installed from [NPM](https://npmjs.org):
 
@@ -29,10 +32,18 @@ npm install three
 npm install @google/model-viewer
 ```
 
+Finally, include the `<model-viewer>` script in your project.
+
+```js
+import '@google/model-viewer';
+```
+
+### CDN
+
 It can also be used directly from various free CDNs such as [jsDelivr](https://www.jsdelivr.com/package/npm/@google/model-viewer) and Google's own [hosted libraries](https://developers.google.com/speed/libraries#model-viewer):
 
 ```html
-<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/3.4.0/model-viewer.min.js"></script>
+<script type="module" src="https://ajax.googleapis.com/ajax/libs/model-viewer/4.0.0/model-viewer.min.js"></script>
 ```
 
 For more detailed usage documentation and live examples, please visit our docs
@@ -49,7 +60,7 @@ For your production site you may want the extra stability that comes by
 pinning to a specific version, and upgrading on your own schedule (after
 testing).
 
-If you’ve installed via [NPM](https://npmjs.org), you’re all set - you’ll only
+If you’ve installed via [NPM](https://www.npmjs.com/package/@google/model-viewer), you’re all set - you’ll only
 upgrade when you run [`npm update`](https://docs.npmjs.com/cli/update.html).
 Note that three.js is a peer dependency, so that must also be installed, but can
 be shared with other bundled code. Note that `<model-viewer>` requires the
